@@ -78,14 +78,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Sage & Ink — Modern Tattoo Studio" },
+      { title: "SummerRose Tattoos" },
       { name: "description", content: "Bespoke tattoos, flash designs, aftercare and price estimates. Submit an enquiry or claim a flash design." },
-      { name: "author", content: "Sage & Ink" },
-      { property: "og:title", content: "Sage & Ink — Modern Tattoo Studio" },
+      { name: "author", content: "SummerRose Tattoos" },
+      { property: "og:title", content: "SummerRose Tattoos" },
       { property: "og:description", content: "Bespoke tattoos, flash designs, aftercare and price estimates. Submit an enquiry or claim a flash design." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Sage & Ink — Modern Tattoo Studio" },
+      { name: "twitter:title", content: "SummerRose Tattoos" },
       { name: "twitter:description", content: "Bespoke tattoos, flash designs, aftercare and price estimates. Submit an enquiry or claim a flash design." },
       { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/312743fc-876b-4bec-9efa-c42cfe2d8ba0/id-preview-13ef1960--b8919ed0-d904-4b41-8936-ac372cdc625f.lovable.app-1782981592800.png" },
       { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/312743fc-876b-4bec-9efa-c42cfe2d8ba0/id-preview-13ef1960--b8919ed0-d904-4b41-8936-ac372cdc625f.lovable.app-1782981592800.png" },
@@ -143,7 +143,7 @@ function SiteHeader() {
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
         <Link to="/" className="text-lg font-semibold tracking-tight" style={{ fontFamily: "'Fraunces', serif" }}>
-          sage <span className="text-primary">&</span> ink
+          SummerRose Tattoos
         </Link>
         <nav className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
           <Link to="/flash" className="hover:text-foreground transition-colors">Flash</Link>
@@ -161,12 +161,12 @@ function SiteFooter() {
     <footer className="border-t border-border/60 mt-16">
       <div className="mx-auto max-w-6xl px-4 py-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 text-sm text-muted-foreground">
         <div>
-          <p className="font-semibold text-foreground" style={{ fontFamily: "'Fraunces', serif" }}>sage & ink</p>
-          <p className="mt-1">Bespoke tattoos, fine line & botanical.</p>
+          <p className="font-semibold text-foreground" style={{ fontFamily: "'Fraunces', serif" }}>SummerRose Tattoos</p>
+          <p className="mt-1">Micro-Realism • Fine Line • Whimsical</p>
         </div>
         <div className="flex gap-6">
-          <a href="mailto:hello@sageandink.studio" className="hover:text-foreground">hello@sageandink.studio</a>
-          <a href="https://instagram.com" target="_blank" rel="noreferrer" className="hover:text-foreground">Instagram</a>
+          <a href="mailto:Demo@Demo.com" className="hover:text-foreground">demo@demo.com</a>
+          <a href="https://www.instagram.com/summerrosetattoos/" target="_blank" rel="noreferrer" className="hover:text-foreground">Instagram</a>
           <Link to="/auth" className="hover:text-foreground">Artist login</Link>
         </div>
       </div>

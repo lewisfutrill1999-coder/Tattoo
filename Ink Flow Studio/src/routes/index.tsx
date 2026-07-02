@@ -27,12 +27,12 @@ function Home() {
       <section className="mx-auto max-w-6xl px-4 pt-16 pb-24 md:pt-24 md:pb-32">
         <div className="grid md:grid-cols-5 gap-10 items-center">
           <div className="md:col-span-3">
-            <p className="text-xs uppercase tracking-[0.2em] text-primary font-medium">Independent tattoo studio</p>
+            <p className="text-xs uppercase tracking-[0.2em] text-primary font-medium">Micro-Realism • Fine Line • Whimsical</p>
             <h1 style={serif} className="mt-4 text-5xl md:text-7xl font-semibold leading-[1.05] tracking-tight">
               Thoughtful ink,<br/>made just for you.
             </h1>
             <p className="mt-6 text-lg text-muted-foreground max-w-xl">
-              Fine line, botanical and blackwork tattoos by appointment. Submit an enquiry, claim a flash design, or get a rough price before you book.
+              Custom tattoos by SummerRose, based at Inkantations in Towcester, Northampton. Submit an enquiry, claim a flash design, or get a rough price before you book.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link to="/enquiry" className="inline-flex items-center gap-2 rounded-full bg-foreground text-background px-6 py-3 text-sm font-medium hover:opacity-90 transition">
@@ -115,10 +115,10 @@ function Home() {
       <section className="mx-auto max-w-6xl px-4 pb-20">
         <div className="rounded-3xl bg-foreground text-background p-10 md:p-16">
           <h2 style={serif} className="text-3xl md:text-4xl font-semibold tracking-tight">Ready when you are.</h2>
-          <p className="mt-3 text-background/70 max-w-lg">Studio visits by appointment only. Reach out via enquiry form or DM on Instagram.</p>
+          <p className="mt-3 text-background/70 max-w-lg">Appointments are available at Inkantations in Towcester by enquiry only. Reach out via the enquiry form, DM me on Instagram or call the studio.</p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link to="/enquiry" className="inline-flex items-center gap-2 rounded-full bg-background text-foreground px-6 py-3 text-sm font-medium">Start enquiry <ArrowRight className="h-4 w-4" /></Link>
-            <a href="https://instagram.com" target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full border border-background/30 px-6 py-3 text-sm">@sageandink</a>
+            <a href="https://www.instagram.com/summerrosetattoos/" target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full border border-background/30 px-6 py-3 text-sm">@SummerRoseTattoos</a>
           </div>
         </div>
       </section>
