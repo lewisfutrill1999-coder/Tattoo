@@ -7,11 +7,12 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 function NotFoundComponent() {
   return (
@@ -157,17 +158,66 @@ function SiteHeader() {
 }
 
 function SiteFooter() {
+  const [settings, setSettings] = useState({
+    business_name: "SummerRose Tattoos",
+    tagline: "Micro-Realism • Fine Line • Whimsical",
+    instagram_username: "@summerrosetattoos",
+  });
+
+  useEffect(() => {
+    (supabase as any)
+      .from("site_settings")
+      .select("business_name, tagline, instagram_username")
+      .limit(1)
+      .single()
+      .then(({ data, error }: any) => {
+        if (error) {
+          console.error(error);
+          return;
+        }
+
+        if (data) {
+          setSettings({
+            business_name: data.business_name ?? "SummerRose Tattoos",
+            tagline: data.tagline ?? "Micro-Realism • Fine Line • Whimsical",
+            instagram_username: data.instagram_username ?? "@summerrosetattoos",
+          });
+        }
+      });
+  }, []);
+
+  const instagramUrl = `https://www.instagram.com/${settings.instagram_username.replace("@", "")}/`;
+
   return (
     <footer className="border-t border-border/60 mt-16">
       <div className="mx-auto max-w-6xl px-4 py-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 text-sm text-muted-foreground">
         <div>
-          <p className="font-semibold text-foreground" style={{ fontFamily: "'Fraunces', serif" }}>SummerRose Tattoos</p>
-          <p className="mt-1">Micro-Realism • Fine Line • Whimsical</p>
+          <p
+            className="font-semibold text-foreground"
+            style={{ fontFamily: "'Fraunces', serif" }}
+          >
+            {settings.business_name}
+          </p>
+          <p className="mt-1">{settings.tagline}</p>
         </div>
+
         <div className="flex gap-6">
-          <a href="mailto:Demo@Demo.com" className="hover:text-foreground">demo@demo.com</a>
-          <a href="https://www.instagram.com/summerrosetattoos/" target="_blank" rel="noreferrer" className="hover:text-foreground">Instagram</a>
-          <Link to="/auth" className="hover:text-foreground">Artist login</Link>
+          <a href="mailto:Demo@Demo.com" className="hover:text-foreground">
+            demo@demo.com
+          </a>
+
+          <a
+            href={instagramUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="hover:text-foreground"
+          >
+            {settings.instagram_username}
+          </a>
+
+          <Link to="/auth" className="hover:text-foreground">
+            Artist login
+          </Link>
         </div>
       </div>
     </footer>

@@ -9,16 +9,58 @@ export const Route = createFileRoute("/")({
 
 type Flash = { id: string; title: string; style: string; size: string; price: number; status: string };
 
+type SiteSettings = {
+  business_name: string;
+  tagline: string;
+  studio_name: string;
+  location: string;
+  instagram_username: string;
+  homepage_intro: string;
+};
+
 const serif = { fontFamily: "'Fraunces', serif" };
 
 function Home() {
   const [flash, setFlash] = useState<Flash[]>([]);
+  const [settings, setSettings] = useState<SiteSettings>({
+  business_name: "SummerRose Tattoos",
+  tagline: "Micro-Realism • Fine Line • Whimsical",
+  studio_name: "Inkantations",
+  location: "Towcester, Northampton",
+  instagram_username: "@summerrosetattoos",
+  homepage_intro:
+    "Custom tattoos by SummerRose, based at Inkantations in Towcester, Northampton. Submit an enquiry, claim a flash design, or get a rough price before you book.",
+});
   useEffect(() => {
     (supabase.from("flash_designs") as any)
       .select("id,title,style,size,price,status")
       .eq("status", "available")
       .limit(4)
       .then(({ data }: any) => setFlash(data ?? []));
+    (supabase as any)
+  .from("site_settings")
+  .select("*")
+  .limit(1)
+  .single()
+  .then(({ data, error }: any) => {
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    if (data) {
+      setSettings({
+        business_name: data.business_name ?? "SummerRose Tattoos",
+        tagline: data.tagline ?? "Micro-Realism • Fine Line • Whimsical",
+        studio_name: data.studio_name ?? "Inkantations",
+        location: data.location ?? "Towcester, Northampton",
+        instagram_username: data.instagram_username ?? "@summerrosetattoos",
+        homepage_intro:
+          data.homepage_intro ??
+          "Custom tattoos by SummerRose, based at Inkantations in Towcester, Northampton. Submit an enquiry, claim a flash design, or get a rough price before you book.",
+      });
+    }
+  });
   }, []);
 
   return (
@@ -27,12 +69,12 @@ function Home() {
       <section className="mx-auto max-w-6xl px-4 pt-16 pb-24 md:pt-24 md:pb-32">
         <div className="grid md:grid-cols-5 gap-10 items-center">
           <div className="md:col-span-3">
-            <p className="text-xs uppercase tracking-[0.2em] text-primary font-medium">Micro-Realism • Fine Line • Whimsical</p>
+            <p className="text-xs uppercase tracking-[0.2em] text-primary font-medium">{settings.tagline}</p>
             <h1 style={serif} className="mt-4 text-5xl md:text-7xl font-semibold leading-[1.05] tracking-tight">
-              Thoughtful ink,<br/>made just for you.
+              {settings.business_name},<br />made just for you.
             </h1>
             <p className="mt-6 text-lg text-muted-foreground max-w-xl">
-              Custom tattoos by SummerRose, based at Inkantations in Towcester, Northampton. Submit an enquiry, claim a flash design, or get a rough price before you book.
+              {settings.homepage_intro}
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link to="/enquiry" className="inline-flex items-center gap-2 rounded-full bg-foreground text-background px-6 py-3 text-sm font-medium hover:opacity-90 transition">
@@ -118,11 +160,12 @@ function Home() {
       {/* Contact */}
       <section className="mx-auto max-w-6xl px-4 pb-20">
         <div className="rounded-3xl bg-foreground text-background p-10 md:p-16">
-          <h2 style={serif} className="text-3xl md:text-4xl font-semibold tracking-tight">Ready when you are.</h2>
-          <p className="mt-3 text-background/70 max-w-lg">Appointments are available at Inkantations in Towcester by enquiry only. Reach out via the enquiry form, DM me on Instagram or call the studio.</p>
+          <p className="mt-3 text-background/70 max-w-lg">
+            Appointments are available at {settings.studio_name} in {settings.location} by enquiry only. Reach out via the enquiry form or DM me on Instagram.
+          </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link to="/enquiry" className="inline-flex items-center gap-2 rounded-full bg-background text-foreground px-6 py-3 text-sm font-medium">Start enquiry <ArrowRight className="h-4 w-4" /></Link>
-            <a href="https://www.instagram.com/summerrosetattoos/" target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full border border-background/30 px-6 py-3 text-sm">@SummerRoseTattoos</a>
+            <a href="https://www.instagram.com/summerrosetattoos/" target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full border border-background/30 px-6 py-3 text-sm">{settings.instagram_username}</a>
           </div>
         </div>
       </section>
