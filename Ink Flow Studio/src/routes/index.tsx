@@ -16,6 +16,8 @@ type SiteSettings = {
   location: string;
   instagram_username: string;
   homepage_intro: string;
+  logo_url: string;
+  homepage_image_url: string;
 };
 
 const serif = { fontFamily: "'Fraunces', serif" };
@@ -23,14 +25,16 @@ const serif = { fontFamily: "'Fraunces', serif" };
 function Home() {
   const [flash, setFlash] = useState<Flash[]>([]);
   const [settings, setSettings] = useState<SiteSettings>({
-  business_name: "SummerRose Tattoos",
-  tagline: "Micro-Realism • Fine Line • Whimsical",
-  studio_name: "Inkantations",
-  location: "Towcester, Northampton",
-  instagram_username: "@summerrosetattoos",
-  homepage_intro:
-    "Custom tattoos by SummerRose, based at Inkantations in Towcester, Northampton. Submit an enquiry, claim a flash design, or get a rough price before you book.",
-});
+    business_name: "SummerRose Tattoos",
+    tagline: "Micro-Realism • Fine Line • Whimsical",
+    studio_name: "Inkantations",
+    location: "Towcester, Northampton",
+    instagram_username: "@summerrosetattoos",
+    homepage_intro:
+      "Custom tattoos by SummerRose, based at Inkantations in Towcester, Northampton. Submit an enquiry, claim a flash design, or get a rough price before you book.",
+    logo_url: "/images/Logo.png",
+    homepage_image_url: "/images/Logo.png",
+  });
   useEffect(() => {
     (supabase.from("flash_designs") as any)
       .select("id,title,style,size,price,status")
@@ -38,29 +42,31 @@ function Home() {
       .limit(4)
       .then(({ data }: any) => setFlash(data ?? []));
     (supabase as any)
-  .from("site_settings")
-  .select("*")
-  .limit(1)
-  .single()
-  .then(({ data, error }: any) => {
-    if (error) {
-      console.error(error);
-      return;
-    }
+      .from("site_settings")
+      .select("*")
+      .limit(1)
+      .single()
+      .then(({ data, error }: any) => {
+        if (error) {
+          console.error(error);
+          return;
+        }
 
-    if (data) {
-      setSettings({
-        business_name: data.business_name ?? "SummerRose Tattoos",
-        tagline: data.tagline ?? "Micro-Realism • Fine Line • Whimsical",
-        studio_name: data.studio_name ?? "Inkantations",
-        location: data.location ?? "Towcester, Northampton",
-        instagram_username: data.instagram_username ?? "@summerrosetattoos",
-        homepage_intro:
-          data.homepage_intro ??
-          "Custom tattoos by SummerRose, based at Inkantations in Towcester, Northampton. Submit an enquiry, claim a flash design, or get a rough price before you book.",
+        if (data) {
+          setSettings({
+            business_name: data.business_name ?? "SummerRose Tattoos",
+            tagline: data.tagline ?? "Micro-Realism • Fine Line • Whimsical",
+            studio_name: data.studio_name ?? "Inkantations",
+            location: data.location ?? "Towcester, Northampton",
+            instagram_username: data.instagram_username ?? "@summerrosetattoos",
+            homepage_intro:
+              data.homepage_intro ??
+              "Custom tattoos by SummerRose, based at Inkantations in Towcester, Northampton. Submit an enquiry, claim a flash design, or get a rough price before you book.",
+            logo_url: data.logo_url ?? "/images/Logo.png",
+            homepage_image_url: data.homepage_image_url ?? "/images/Logo.png",
+          });
+        }
       });
-    }
-  });
   }, []);
 
   return (
@@ -89,9 +95,9 @@ function Home() {
             <div className="aspect-[4/5] rounded-3xl bg-gradient-to-br from-accent via-secondary to-muted border border-border/60 relative overflow-hidden">
               <div className="absolute inset-8 rounded-2xl border border-foreground/10 flex items-center justify-center">
                 <img
-                src="/images/Logo.png"
-                alt="SummerRose Tattoos Logo"
-                className="w-30 h-50 object-cover"
+                  src={settings.homepage_image_url}
+                  alt={`${settings.business_name} homepage image`}
+                  className="h-full w-full object-cover"
                 />
               </div>
             </div>
