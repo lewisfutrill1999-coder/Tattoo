@@ -46,7 +46,11 @@ function Home() {
           <div className="md:col-span-2">
             <div className="aspect-[4/5] rounded-3xl bg-gradient-to-br from-accent via-secondary to-muted border border-border/60 relative overflow-hidden">
               <div className="absolute inset-8 rounded-2xl border border-foreground/10 flex items-center justify-center">
-                <Leaf className="h-20 w-20 text-primary/70" strokeWidth={1} />
+                <img
+                src="/images/Logo.png"
+                alt="SummerRose Tattoos Logo"
+                className="w-30 h-50 object-cover"
+                />
               </div>
             </div>
           </div>

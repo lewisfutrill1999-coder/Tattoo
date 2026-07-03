@@ -39,11 +39,29 @@ function Dashboard() {
           <p className="text-xs uppercase tracking-[0.2em] text-primary font-medium">Artist</p>
           <h1 style={serif} className="mt-2 text-4xl font-semibold tracking-tight">Dashboard</h1>
         </div>
-        <div className="flex gap-2">
-          <Link to="/enquiries" className="rounded-full border border-border px-4 py-2 text-sm hover:bg-accent">Manage enquiries</Link>
-          <button onClick={signOut} className="rounded-full bg-foreground text-background px-4 py-2 text-sm">Sign out</button>
+          <div className="flex gap-2">
+            <Link
+              to="/settings"
+              className="rounded-full border border-border px-4 py-2 text-sm hover:bg-accent"
+            >
+              Edit website
+            </Link>
+
+            <Link
+              to="/enquiries"
+              className="rounded-full border border-border px-4 py-2 text-sm hover:bg-accent"
+            >
+              Manage enquiries
+            </Link>
+
+            <button
+              onClick={signOut}
+              className="rounded-full bg-foreground text-background px-4 py-2 text-sm"
+            >
+              Sign out
+            </button>
+          </div>
         </div>
-      </div>
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-8">
         <Stat label="Total enquiries" value={stats.total} />
         <Stat label="New" value={stats.new} highlight />
