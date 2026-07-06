@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
-  head: () => ({ meta: [{ title: "Dashboard — Sage & Ink" }] }),
+  head: () => ({ meta: [{ title: "Dashboard — SummerRose Tattoos" }] }),
   component: Dashboard,
 });
 
@@ -54,6 +54,13 @@ function Dashboard() {
             className="rounded-full border border-border px-4 py-2 text-sm hover:bg-accent"
           >
             Manage flash
+          </Link>
+
+          <Link
+            to="/flash-claims"
+            className="rounded-full border border-border px-4 py-2 text-sm hover:bg-accent"
+          >
+            Flash claims
           </Link>
 
           <Link
