@@ -66,9 +66,12 @@ function FlashCard({ f }: { f: Flash }) {
         {f.description && <p className="mt-3 text-sm text-muted-foreground">{f.description}</p>}
         <div className="mt-5 pt-4 border-t border-border/60">
           {f.status === "available" ? (
-            <Link to="/flash/$id/claim" params={{ id: f.id }} className="block text-center rounded-full bg-foreground text-background py-2.5 text-sm font-medium hover:opacity-90 transition">
+            <a
+              href={`/claim-flash/${f.id}`}
+              className="block text-center rounded-full bg-foreground text-background py-2.5 text-sm font-medium hover:opacity-90 transition"
+            >
               Claim this design
-            </Link>
+            </a>
           ) : (
             <button disabled className="block w-full rounded-full border border-border py-2.5 text-sm text-muted-foreground cursor-not-allowed">
               {f.status === "claimed" ? "Already claimed" : "Sold"}

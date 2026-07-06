@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { Check } from "lucide-react";
 
-export const Route = createFileRoute("/flash/$id/claim")({
+export const Route = createFileRoute("/claim-flash/$id")({
   head: () => ({ meta: [{ title: "Claim flash design — Sage & Ink" }] }),
   component: ClaimPage,
 });
@@ -36,7 +36,9 @@ function ClaimPage() {
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+
     const fd = new FormData(e.currentTarget);
+
     const raw = {
       full_name: String(fd.get("full_name") ?? ""),
       email: String(fd.get("email") ?? ""),
@@ -45,12 +47,61 @@ function ClaimPage() {
       preferred_dates: String(fd.get("preferred_dates") ?? ""),
       consent: fd.get("consent") === "on",
     };
+
     const parsed = schema.safeParse(raw);
-    if (!parsed.success) { toast.error(parsed.error.issues[0]?.message ?? "Please check the form"); return; }
+
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message ?? "Please check the form");
+      return;
+    }
+
     setSubmitting(true);
-    const { error } = await (supabase.from("flash_claims") as any).insert({ flash_id: id, ...parsed.data });
+
+    const { data: updatedDesigns, error: statusError } = await (supabase as any)
+      .from("flash_designs")
+      .update({
+        status: "claimed",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id)
+      .eq("status", "available")
+      .select("id");
+
+    if (statusError) {
+      console.error(statusError);
+      toast.error("Something went wrong while claiming this design.");
+      setSubmitting(false);
+      return;
+    }
+
+    if (!updatedDesigns || updatedDesigns.length === 0) {
+      toast.error("Sorry, this design has already been claimed.");
+      setSubmitting(false);
+      return;
+    }
+
+    const { error } = await (supabase.from("flash_claims") as any).insert({
+      flash_id: id,
+      ...parsed.data,
+    });
+
+    if (error) {
+      console.error(error);
+
+      await (supabase as any)
+        .from("flash_designs")
+        .update({
+          status: "available",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", id);
+
+      toast.error("Something went wrong.");
+      setSubmitting(false);
+      return;
+    }
+
     setSubmitting(false);
-    if (error) { toast.error("Something went wrong."); return; }
     setDone(true);
   }
 
