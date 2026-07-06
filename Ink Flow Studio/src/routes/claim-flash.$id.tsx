@@ -17,6 +17,7 @@ const schema = z.object({
   full_name: z.string().trim().min(1).max(120),
   email: z.string().trim().email().max(255),
   phone: z.string().trim().max(40).optional().or(z.literal("")),
+  customer_instagram: z.string().trim().max(80).optional().or(z.literal("")),
   placement: z.string().trim().max(120).optional().or(z.literal("")),
   preferred_dates: z.string().trim().max(200).optional().or(z.literal("")),
   consent: z.literal(true, { errorMap: () => ({ message: "Please confirm the consent checkbox" }) }),
@@ -46,6 +47,7 @@ function ClaimPage() {
       full_name: String(fd.get("full_name") ?? ""),
       email: String(fd.get("email") ?? ""),
       phone: String(fd.get("phone") ?? ""),
+      customer_instagram: String(fd.get("customer_instagram") ?? ""),
       placement: String(fd.get("placement") ?? ""),
       preferred_dates: String(fd.get("preferred_dates") ?? ""),
       consent: fd.get("consent") === "on",
@@ -119,11 +121,12 @@ function ClaimPage() {
     Style: ${design?.style || "Not provided"}
     Size: ${design?.size || "Not provided"}
     Price: ${design?.price !== null && design?.price !== undefined
-            ? `£${Number(design.price).toFixed(0)}`
-            : "Price TBC"
-          }
+        ? `£${Number(design.price).toFixed(0)}`
+        : "Price TBC"
+      }
 
     Name: ${submittedClaim?.full_name ?? ""}
+    Instagram: ${submittedClaim?.customer_instagram || "Not provided"}
     Email: ${submittedClaim?.email ?? ""}
     Phone: ${submittedClaim?.phone || "Not provided"}
     Placement: ${submittedClaim?.placement || "Not provided"}
@@ -211,11 +214,39 @@ function ClaimPage() {
       <h1 style={serif} className="mt-3 text-4xl font-semibold tracking-tight">{design?.title ?? "Flash design"}</h1>
       {design && <p className="mt-2 text-muted-foreground">{design.style} · {design.size} · £{Number(design.price).toFixed(0)}</p>}
       <form onSubmit={onSubmit} className="mt-10 space-y-6 rounded-3xl border border-border/60 bg-card p-6 md:p-8">
-        <Field label="Full name"><input name="full_name" required maxLength={120} className={inputCls} /></Field>
+        <Field label="Full name">
+          <input
+            name="full_name"
+            required
+            maxLength={120}
+            className={inputCls}
+          />
+        </Field>
+        
         <div className="grid md:grid-cols-2 gap-4">
-          <Field label="Email"><input name="email" type="email" required maxLength={255} className={inputCls} /></Field>
-          <Field label="Phone (optional)"><input name="phone" maxLength={40} className={inputCls} /></Field>
+          <Field label="Email">
+            <input
+              name="email"
+              type="email"
+              required
+              maxLength={255}
+              className={inputCls}
+            />
+          </Field>
+
+          <Field label="Phone (optional)">
+            <input name="phone" maxLength={40} className={inputCls} />
+          </Field>
         </div>
+
+        <Field label="Instagram username">
+          <input
+            name="customer_instagram"
+            maxLength={80}
+            className={inputCls}
+            placeholder="@yourusername"
+          />
+        </Field>
         <Field label="Preferred placement"><input name="placement" maxLength={120} className={inputCls} placeholder="e.g. inner forearm" /></Field>
         <Field label="Preferred dates"><input name="preferred_dates" maxLength={200} className={inputCls} placeholder="e.g. any weekday in April" /></Field>
         <label className="flex items-start gap-3 text-sm">

@@ -12,6 +12,7 @@ type FlashClaim = {
     full_name: string;
     email: string;
     phone: string | null;
+    customer_instagram: string | null;
     placement: string | null;
     preferred_dates: string | null;
     consent: boolean;
@@ -46,7 +47,7 @@ function FlashClaims() {
         const { data, error } = await (supabase as any)
             .from("flash_claims")
             .select(
-                "id,flash_id,full_name,email,phone,placement,preferred_dates,consent,status,created_at,flash_designs(title,image_url,style,size,price,status)"
+                "id,flash_id,full_name,email,phone,customer_instagram,placement,preferred_dates,consent,status,created_at,flash_designs(title,image_url,style,size,price,status)"
             )
             .order("created_at", { ascending: false });
 
@@ -141,6 +142,30 @@ function FlashClaims() {
             ? claims
             : claims.filter((claim) => claim.status === statusFilter);
 
+    function getInstagramHandle(instagram: string | null) {
+        if (!instagram) {
+            return "";
+        }
+
+        return instagram
+            .trim()
+            .replace("@", "")
+            .replace("https://www.instagram.com/", "")
+            .replace("https://instagram.com/", "")
+            .split("/")[0]
+            .split("?")[0];
+    }
+
+    function getInstagramDmUrl(instagram: string | null) {
+        const handle = getInstagramHandle(instagram);
+
+        if (!handle) {
+            return "";
+        }
+
+        return `https://ig.me/m/${handle}`;
+    }
+
     return (
         <div className="mx-auto max-w-5xl px-4 py-10">
             <h1 className="text-3xl font-semibold">Flash Claims</h1>
@@ -234,6 +259,20 @@ function FlashClaims() {
                                         {claim.phone && (
                                             <p className="text-sm text-muted-foreground">
                                                 {claim.phone}
+                                            </p>
+                                        )}
+
+                                        {claim.customer_instagram && (
+                                            <p className="text-sm text-muted-foreground">
+                                                Instagram:{" "}
+                                                <a
+                                                    href={getInstagramDmUrl(claim.customer_instagram)}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="font-medium text-foreground underline"
+                                                >
+                                                    @{getInstagramHandle(claim.customer_instagram)}
+                                                </a>
                                             </p>
                                         )}
                                     </div>
