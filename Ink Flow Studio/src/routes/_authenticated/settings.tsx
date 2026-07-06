@@ -17,6 +17,7 @@ type SiteSettings = {
   homepage_intro: string;
   logo_url: string;
   homepage_image_url: string;
+  admin_dm_template: string;
 };
 
 function ArtistSettings() {
@@ -30,6 +31,8 @@ function ArtistSettings() {
       "Custom tattoos by SummerRose, based at Inkantations in Towcester, Northampton. Submit an enquiry, claim a flash design, or get a rough price before you book.",
     logo_url: "/images/Logo.png",
     homepage_image_url: "/images/Logo.png",
+    admin_dm_template:
+      "Hey lovely, thank you for claiming the {design_title} flash design 🖤\n\nI’ve got your claim through the website and I’ve marked it as claimed for you.\n\nPlacement: {placement}\nPreferred dates: {preferred_dates}\n\nCan you send me any extra placement/reference details here and I’ll get back to you with next steps. My availability based on your preferred dates is:\n\nPASTE AVAILABILITY HERE\n\nLook forward to hearing back from you :) xx",
   });
 
   const [loading, setLoading] = useState(true);
@@ -69,6 +72,9 @@ function ArtistSettings() {
             "Custom tattoos by SummerRose, based at Inkantations in Towcester, Northampton. Submit an enquiry, claim a flash design, or get a rough price before you book.",
           logo_url: data.logo_url ?? "/images/Logo.png",
           homepage_image_url: data.homepage_image_url ?? "/images/Logo.png",
+          admin_dm_template:
+            data.admin_dm_template ??
+            "Hey lovely, thank you for claiming the {design_title} flash design 🖤\n\nI’ve got your claim through the website and I’ve marked it as claimed for you.\n\nPlacement: {placement}\nPreferred dates: {preferred_dates}\n\nCan you send me any extra placement/reference details here and I’ll get back to you with next steps. My availability based on your preferred dates is:\n\nPASTE AVAILABILITY HERE\n\nLook forward to hearing back from you :) xx",
         });
       }
 
@@ -269,6 +275,7 @@ function ArtistSettings() {
         homepage_intro: settings.homepage_intro,
         logo_url: settings.logo_url,
         homepage_image_url: settings.homepage_image_url,
+        admin_dm_template: settings.admin_dm_template,
         updated_at: new Date().toISOString(),
       })
       .eq("id", settings.id);
@@ -343,6 +350,27 @@ function ArtistSettings() {
             value={settings.instagram_username}
             onChange={(event) => updateField("instagram_username", event.target.value)}
           />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium">
+            Admin Instagram DM reply template
+          </label>
+
+          <p className="mt-1 text-sm text-muted-foreground">
+            This is the message you can copy from the Flash Claims page when replying to
+            a customer on Instagram.
+          </p>
+
+          <textarea
+            className="mt-2 min-h-64 w-full rounded-lg border px-3 py-2"
+            value={settings.admin_dm_template}
+            onChange={(event) => updateField("admin_dm_template", event.target.value)}
+          />
+
+          <p className="mt-2 text-xs text-muted-foreground">
+            You can use: {"{design_title}"}, {"{placement}"}, {"{preferred_dates}"}
+          </p>
         </div>
 
         <div>

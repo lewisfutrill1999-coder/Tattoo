@@ -28,10 +28,16 @@ type FlashClaim = {
     } | null;
 };
 
+type SiteSettings = {
+    admin_dm_template: string | null;
+};
+
 function FlashClaims() {
     const [claims, setClaims] = useState<FlashClaim[]>([]);
     const [loading, setLoading] = useState(true);
     const [message, setMessage] = useState("");
+    const [siteSettings, setSiteSettings] = useState<SiteSettings | null>(null);
+    const [copiedClaimId, setCopiedClaimId] = useState<string | null>(null);
     const [pendingStatusChange, setPendingStatusChange] = useState<{
         claim: FlashClaim;
         newStatus: string;
@@ -51,6 +57,14 @@ function FlashClaims() {
             )
             .order("created_at", { ascending: false });
 
+        const { data: settingsData } = await (supabase as any)
+            .from("site_settings")
+            .select("admin_dm_template")
+            .limit(1)
+            .maybeSingle();
+
+        setSiteSettings((settingsData ?? null) as SiteSettings | null);
+
         if (error) {
             console.error(error);
             setMessage("Could not load flash claims.");
@@ -59,6 +73,7 @@ function FlashClaims() {
         }
 
         setLoading(false);
+
     }
 
     function updateClaimStatus(claim: FlashClaim, newStatus: string) {
@@ -166,6 +181,32 @@ function FlashClaims() {
         return `https://ig.me/m/${handle}`;
     }
 
+    function buildAdminDmReply(claim: FlashClaim, template: string) {
+        return template
+            .replaceAll("{name}", claim.full_name || "lovely")
+            .replaceAll(
+                "{first_name}",
+                claim.full_name?.split(" ")[0] || "lovely",
+            )
+            .replaceAll(
+                "{design_title}",
+                claim.flash_designs?.title || "the flash design",
+            )
+            .replaceAll("{placement}", claim.placement || "Not provided")
+            .replaceAll("{preferred_dates}", claim.preferred_dates || "Not provided");
+    }
+
+    async function copyAdminDmReply(claim: FlashClaim) {
+        const fallbackTemplate =
+            "Hey lovely, thank you for claiming the {design_title} flash design 🖤\n\nI’ve got your claim through the website and I’ve marked it as claimed for you.\n\nPlacement: {placement}\nPreferred dates: {preferred_dates}\n\nCan you send me any extra placement/reference details here and I’ll get back to you with next steps. My availability based on your preferred dates is:\n\nPASTE AVAILABILITY HERE\n\nLook forward to hearing back from you :) xx";
+
+        const template = siteSettings?.admin_dm_template || fallbackTemplate;
+        const messageToCopy = buildAdminDmReply(claim, template);
+
+        await navigator.clipboard.writeText(messageToCopy);
+        setCopiedClaimId(claim.id);
+    }
+
     return (
         <div className="mx-auto max-w-5xl px-4 py-10">
             <h1 className="text-3xl font-semibold">Flash Claims</h1>
@@ -256,6 +297,7 @@ function FlashClaims() {
                                         <p className="mt-1 text-sm text-muted-foreground">
                                             {claim.email}
                                         </p>
+
                                         {claim.phone && (
                                             <p className="text-sm text-muted-foreground">
                                                 {claim.phone}
@@ -275,6 +317,27 @@ function FlashClaims() {
                                                 </a>
                                             </p>
                                         )}
+
+                                        <div className="mt-4 flex flex-wrap gap-3">
+                                            <button
+                                                type="button"
+                                                onClick={() => copyAdminDmReply(claim)}
+                                                className="rounded-full border px-4 py-2 text-sm font-medium hover:bg-accent"
+                                            >
+                                                {copiedClaimId === claim.id ? "DM copied" : "Copy DM reply"}
+                                            </button>
+
+                                            {claim.customer_instagram && (
+                                                <a
+                                                    href={getInstagramDmUrl(claim.customer_instagram)}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background hover:opacity-90"
+                                                >
+                                                    Open Instagram DM
+                                                </a>
+                                            )}
+                                        </div>
                                     </div>
 
                                     <select
