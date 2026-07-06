@@ -21,6 +21,7 @@ const schema = z.object({
   preferred_dates: z.string().trim().max(200).optional().or(z.literal("")),
   consent: z.literal(true, { errorMap: () => ({ message: "Please confirm the consent checkbox" }) }),
 });
+type ClaimFormData = z.infer<typeof schema>;
 
 function ClaimPage() {
   const { id } = Route.useParams();
@@ -28,6 +29,8 @@ function ClaimPage() {
   const [design, setDesign] = useState<any>(null);
   const [done, setDone] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [submittedClaim, setSubmittedClaim] = useState<ClaimFormData | null>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     (supabase.from("flash_designs") as any).select("*").eq("id", id).maybeSingle()
@@ -101,6 +104,7 @@ function ClaimPage() {
       return;
     }
 
+    setSubmittedClaim(parsed.data);
     setSubmitting(false);
     setDone(true);
   }
@@ -108,14 +112,93 @@ function ClaimPage() {
   if (design === null) return <div className="mx-auto max-w-xl px-4 py-20 text-center text-muted-foreground">Loading...</div>;
 
   if (done) {
+    const instagramMessage = `Hi SummerRose, I’ve just submitted a flash claim through your website.
+
+    Design:
+    Title: ${design?.title ?? "Flash design"}
+    Style: ${design?.style || "Not provided"}
+    Size: ${design?.size || "Not provided"}
+    Price: ${design?.price !== null && design?.price !== undefined
+            ? `£${Number(design.price).toFixed(0)}`
+            : "Price TBC"
+          }
+
+    Name: ${submittedClaim?.full_name ?? ""}
+    Email: ${submittedClaim?.email ?? ""}
+    Phone: ${submittedClaim?.phone || "Not provided"}
+    Placement: ${submittedClaim?.placement || "Not provided"}
+    Preferred dates: ${submittedClaim?.preferred_dates || "Not provided"}
+
+    I’d like to arrange the next steps through Instagram.`;
+
+    async function copyInstagramMessage() {
+      await navigator.clipboard.writeText(instagramMessage);
+      setCopied(true);
+    }
+
     return (
-      <div className="mx-auto max-w-xl px-4 py-24 text-center">
-        <div className="mx-auto h-14 w-14 rounded-full bg-primary/20 flex items-center justify-center"><Check className="h-7 w-7 text-primary" /></div>
-        <h1 style={serif} className="mt-6 text-3xl font-semibold">Claim submitted</h1>
-        <p className="mt-3 text-muted-foreground">I'll reach out shortly to confirm your appointment for <strong>{design?.title}</strong>.</p>
-        <div className="mt-6 flex justify-center gap-3">
-          <Link to="/flash" className="rounded-full border border-border px-6 py-3 text-sm">More flash</Link>
-          <button onClick={() => navigate({ to: "/" })} className="rounded-full bg-foreground text-background px-6 py-3 text-sm">Home</button>
+      <div className="mx-auto max-w-2xl px-4 py-24">
+        <div className="rounded-3xl border bg-card p-6 md:p-8 text-center">
+          <div className="mx-auto h-14 w-14 rounded-full bg-primary/20 flex items-center justify-center">
+            <Check className="h-7 w-7 text-primary" />
+          </div>
+
+          <h1 style={serif} className="mt-6 text-3xl font-semibold">
+            Claim submitted
+          </h1>
+
+          <p className="mt-3 text-muted-foreground">
+            Your claim for <strong>{design?.title}</strong> has been saved. Please
+            now message me on Instagram so we can arrange the next steps.
+          </p>
+
+          {design?.image_url && (
+            <img
+              src={design.image_url}
+              alt={design?.title}
+              className="mx-auto mt-6 aspect-[4/5] w-48 rounded-2xl border object-cover"
+            />
+          )}
+
+          <div className="mt-8 rounded-2xl bg-muted/40 p-4 text-left">
+            <p className="text-sm font-medium">Copy this Instagram message:</p>
+
+            <pre className="mt-3 whitespace-pre-wrap rounded-xl bg-background p-4 text-sm text-muted-foreground">
+              {instagramMessage}
+            </pre>
+          </div>
+
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
+            <button
+              type="button"
+              onClick={copyInstagramMessage}
+              className="rounded-full bg-foreground text-background px-6 py-3 text-sm font-medium"
+            >
+              {copied ? "Message copied" : "Copy Instagram message"}
+            </button>
+
+            <a
+              href="https://ig.me/m/summerrosetattoos"
+              target="_blank"
+              rel="noreferrer"
+              className="rounded-full border border-border px-6 py-3 text-sm font-medium"
+            >
+              Open Instagram DM
+            </a>
+          </div>
+
+          <div className="mt-6 flex justify-center gap-3">
+            <Link to="/flash" className="text-sm text-muted-foreground hover:text-foreground">
+              More flash
+            </Link>
+
+            <button
+              onClick={() => navigate({ to: "/" })}
+              className="text-sm text-muted-foreground hover:text-foreground"
+            >
+              Home
+            </button>
+          </div>
         </div>
       </div>
     );
