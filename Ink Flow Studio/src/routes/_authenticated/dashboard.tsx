@@ -15,20 +15,22 @@ function Dashboard() {
   const [recent, setRecent] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => { (async () => {
-    const sb = supabase as any;
-    const [a, b, c, d, e, r] = await Promise.all([
-      sb.from("enquiries").select("*", { count: "exact", head: true }),
-      sb.from("enquiries").select("*", { count: "exact", head: true }).eq("status", "new"),
-      sb.from("enquiries").select("*", { count: "exact", head: true }).eq("status", "quoted"),
-      sb.from("enquiries").select("*", { count: "exact", head: true }).eq("status", "booked"),
-      sb.from("flash_claims").select("*", { count: "exact", head: true }),
-      sb.from("enquiries").select("id,full_name,idea,style,status,created_at").order("created_at", { ascending: false }).limit(5),
-    ]);
-    setStats({ total: a.count ?? 0, new: b.count ?? 0, quoted: c.count ?? 0, booked: d.count ?? 0, claims: e.count ?? 0 });
-    setRecent(r.data ?? []);
-    setLoading(false);
-  })(); }, []);
+  useEffect(() => {
+    (async () => {
+      const sb = supabase as any;
+      const [a, b, c, d, e, r] = await Promise.all([
+        sb.from("enquiries").select("*", { count: "exact", head: true }),
+        sb.from("enquiries").select("*", { count: "exact", head: true }).eq("status", "new"),
+        sb.from("enquiries").select("*", { count: "exact", head: true }).eq("status", "quoted"),
+        sb.from("enquiries").select("*", { count: "exact", head: true }).eq("status", "booked"),
+        sb.from("flash_claims").select("*", { count: "exact", head: true }),
+        sb.from("enquiries").select("id,full_name,idea,style,status,created_at").order("created_at", { ascending: false }).limit(5),
+      ]);
+      setStats({ total: a.count ?? 0, new: b.count ?? 0, quoted: c.count ?? 0, booked: d.count ?? 0, claims: e.count ?? 0 });
+      setRecent(r.data ?? []);
+      setLoading(false);
+    })();
+  }, []);
 
   async function signOut() { await supabase.auth.signOut(); navigate({ to: "/auth" }); }
 
@@ -39,29 +41,36 @@ function Dashboard() {
           <p className="text-xs uppercase tracking-[0.2em] text-primary font-medium">Artist</p>
           <h1 style={serif} className="mt-2 text-4xl font-semibold tracking-tight">Dashboard</h1>
         </div>
-          <div className="flex gap-2">
-            <Link
-              to="/settings"
-              className="rounded-full border border-border px-4 py-2 text-sm hover:bg-accent"
-            >
-              Edit website
-            </Link>
+        <div className="flex gap-2">
+          <Link
+            to="/settings"
+            className="rounded-full border border-border px-4 py-2 text-sm hover:bg-accent"
+          >
+            Edit website
+          </Link>
 
-            <Link
-              to="/enquiries"
-              className="rounded-full border border-border px-4 py-2 text-sm hover:bg-accent"
-            >
-              Manage enquiries
-            </Link>
+          <Link
+            to="/manage-flash"
+            className="rounded-full border border-border px-4 py-2 text-sm hover:bg-accent"
+          >
+            Manage flash
+          </Link>
 
-            <button
-              onClick={signOut}
-              className="rounded-full bg-foreground text-background px-4 py-2 text-sm"
-            >
-              Sign out
-            </button>
-          </div>
+          <Link
+            to="/enquiries"
+            className="rounded-full border border-border px-4 py-2 text-sm hover:bg-accent"
+          >
+            Manage enquiries
+          </Link>
+
+          <button
+            onClick={signOut}
+            className="rounded-full bg-foreground text-background px-4 py-2 text-sm"
+          >
+            Sign out
+          </button>
         </div>
+      </div>
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-8">
         <Stat label="Total enquiries" value={stats.total} />
         <Stat label="New" value={stats.new} highlight />
@@ -75,27 +84,27 @@ function Dashboard() {
           <Link to="/enquiries" className="text-sm text-primary hover:underline">View all →</Link>
         </div>
         {loading ? <div className="p-8 text-center text-muted-foreground text-sm">Loading...</div>
-        : recent.length === 0 ? <div className="p-8 text-center text-muted-foreground text-sm">No enquiries yet.</div>
-        : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-secondary/60 text-xs uppercase tracking-wider text-muted-foreground">
-                <tr><th className="text-left px-5 py-3">Client</th><th className="text-left px-5 py-3">Idea</th><th className="text-left px-5 py-3">Style</th><th className="text-left px-5 py-3">Status</th><th className="text-left px-5 py-3">Received</th></tr>
-              </thead>
-              <tbody>
-                {recent.map((r) => (
-                  <tr key={r.id} className="border-t border-border/60">
-                    <td className="px-5 py-3 font-medium">{r.full_name}</td>
-                    <td className="px-5 py-3 text-muted-foreground max-w-xs truncate">{r.idea}</td>
-                    <td className="px-5 py-3">{r.style}</td>
-                    <td className="px-5 py-3"><StatusPill s={r.status} /></td>
-                    <td className="px-5 py-3 text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+          : recent.length === 0 ? <div className="p-8 text-center text-muted-foreground text-sm">No enquiries yet.</div>
+            : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-secondary/60 text-xs uppercase tracking-wider text-muted-foreground">
+                    <tr><th className="text-left px-5 py-3">Client</th><th className="text-left px-5 py-3">Idea</th><th className="text-left px-5 py-3">Style</th><th className="text-left px-5 py-3">Status</th><th className="text-left px-5 py-3">Received</th></tr>
+                  </thead>
+                  <tbody>
+                    {recent.map((r) => (
+                      <tr key={r.id} className="border-t border-border/60">
+                        <td className="px-5 py-3 font-medium">{r.full_name}</td>
+                        <td className="px-5 py-3 text-muted-foreground max-w-xs truncate">{r.idea}</td>
+                        <td className="px-5 py-3">{r.style}</td>
+                        <td className="px-5 py-3"><StatusPill s={r.status} /></td>
+                        <td className="px-5 py-3 text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
       </div>
     </div>
   );

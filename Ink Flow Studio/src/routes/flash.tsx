@@ -15,7 +15,16 @@ export const Route = createFileRoute("/flash")({
 
 const serif = { fontFamily: "'Fraunces', serif" };
 
-type Flash = { id: string; title: string; style: string; size: string; price: number; description: string | null; image_url: string | null; status: "available" | "claimed" | "tattooed" };
+type Flash = {
+  id: string;
+  title: string;
+  style: string | null;
+  size: string | null;
+  price: number | null;
+  description: string | null;
+  image_url: string | null;
+  status: "available" | "claimed" | "sold";
+};
 
 function FlashGallery() {
   const [items, setItems] = useState<Flash[]>([]);
@@ -40,7 +49,7 @@ function FlashGallery() {
 function FlashCard({ f }: { f: Flash }) {
   const badge = f.status === "available" ? "bg-primary/20 text-foreground border-primary/40"
     : f.status === "claimed" ? "bg-muted text-muted-foreground border-border"
-    : "bg-foreground text-background border-foreground";
+      : "bg-foreground text-background border-foreground";
   return (
     <div className="rounded-2xl bg-card border border-border/60 overflow-hidden flex flex-col">
       <div className="aspect-[4/5] bg-gradient-to-br from-secondary via-background to-accent flex items-center justify-center relative">
@@ -62,7 +71,7 @@ function FlashCard({ f }: { f: Flash }) {
             </Link>
           ) : (
             <button disabled className="block w-full rounded-full border border-border py-2.5 text-sm text-muted-foreground cursor-not-allowed">
-              {f.status === "claimed" ? "Already claimed" : "Tattooed"}
+              {f.status === "claimed" ? "Already claimed" : "Sold"}
             </button>
           )}
         </div>
