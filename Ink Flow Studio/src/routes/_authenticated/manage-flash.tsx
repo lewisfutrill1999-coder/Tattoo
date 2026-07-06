@@ -15,6 +15,7 @@ type FlashForm = {
     price: string;
     status: string;
     image_url: string;
+    original_image_url: string;
 };
 
 type FlashDesign = {
@@ -26,6 +27,7 @@ type FlashDesign = {
     price: number | null;
     status: string;
     image_url: string | null;
+    original_image_url: string | null;
 };
 
 function ManageFlashDesigns() {
@@ -37,25 +39,39 @@ function ManageFlashDesigns() {
         price: "",
         status: "available",
         image_url: "",
+        original_image_url: "",
     });
 
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState("");
     const [flashDesigns, setFlashDesigns] = useState<FlashDesign[]>([]);
     const [loadingFlash, setLoadingFlash] = useState(true);
+    const [editingId, setEditingId] = useState<string | null>(null);
+    const [editForm, setEditForm] = useState<FlashForm>({
+        title: "",
+        description: "",
+        style: "",
+        size: "",
+        price: "",
+        status: "available",
+        image_url: "",
+        original_image_url: "",
+    });
     const [flashCropPreview, setFlashCropPreview] = useState("");
     const [flashCrop, setFlashCrop] = useState({ x: 0, y: 0 });
     const [flashZoom, setFlashZoom] = useState(1);
     const [flashCroppedAreaPixels, setFlashCroppedAreaPixels] =
         useState<Area | null>(null);
     const [uploadingImage, setUploadingImage] = useState(false);
+    const [flashImageTarget, setFlashImageTarget] = useState<"new" | "edit">("new");
+    const [flashCropFile, setFlashCropFile] = useState<File | null>(null);
 
     async function loadFlashDesigns() {
         setLoadingFlash(true);
 
         const { data, error } = await (supabase as any)
             .from("flash_designs")
-            .select("id,title,description,style,size,price,status,image_url")
+            .select("id,title,description,style,size,price,status,image_url,original_image_url")
             .order("created_at", { ascending: false });
 
         if (error) {
@@ -79,18 +95,80 @@ function ManageFlashDesigns() {
         }));
     }
 
-    function selectFlashImageForCrop(event: React.ChangeEvent<HTMLInputElement>) {
+    function startEditingFlash(design: FlashDesign) {
+        setEditingId(design.id);
+
+        setEditForm({
+            title: design.title ?? "",
+            description: design.description ?? "",
+            style: design.style ?? "",
+            size: design.size ?? "",
+            price: design.price !== null ? String(design.price) : "",
+            status: design.status,
+            image_url: design.image_url ?? "",
+            original_image_url: design.original_image_url ?? design.image_url ?? "",
+        });
+
+        setMessage("Editing flash design.");
+    }
+
+    function updateEditField(field: keyof FlashForm, value: string) {
+        setEditForm((current) => ({
+            ...current,
+            [field]: value,
+        }));
+    }
+
+    function cancelEditingFlash() {
+        setEditForm({
+            title: "",
+            description: "",
+            style: "",
+            size: "",
+            price: "",
+            status: "available",
+            image_url: "",
+            original_image_url: "",
+        });
+
+        setMessage("");
+    }
+
+
+    function selectFlashImageForCrop(
+        event: React.ChangeEvent<HTMLInputElement>,
+        target: "new" | "edit"
+    ) {
         const file = event.target.files?.[0];
 
         if (!file) {
             return;
         }
 
+        setFlashImageTarget(target);
+        setFlashCropFile(file);
         setFlashCropPreview(URL.createObjectURL(file));
         setFlashCrop({ x: 0, y: 0 });
         setFlashZoom(1);
         setFlashCroppedAreaPixels(null);
         setMessage("Adjust the flash image crop, then click Use this crop.");
+    }
+
+    function recropCurrentFlashImage() {
+        const imageToCrop = editForm.original_image_url || editForm.image_url;
+
+        if (!imageToCrop) {
+            setMessage("There is no image to crop.");
+            return;
+        }
+
+        setFlashImageTarget("edit");
+        setFlashCropFile(null);
+        setFlashCropPreview(imageToCrop);
+        setFlashCrop({ x: 0, y: 0 });
+        setFlashZoom(1);
+        setFlashCroppedAreaPixels(null);
+        setMessage("Adjust the existing original image crop, then click Use this crop.");
     }
 
     function onFlashCropComplete(_croppedArea: Area, croppedAreaPixels: Area) {
@@ -157,36 +235,79 @@ function ManageFlashDesigns() {
         setMessage("Cropping and uploading flash image...");
 
         try {
-            const fileName = `flash-design-${Date.now()}.jpg`;
+            let originalImageUrl = "";
+
+            if (flashCropFile) {
+                const originalFileName = `flash-original-${Date.now()}-${flashCropFile.name}`;
+
+                const { error: originalUploadError } = await supabase.storage
+                    .from("website-images")
+                    .upload(originalFileName, flashCropFile, {
+                        cacheControl: "3600",
+                        upsert: true,
+                    });
+
+                if (originalUploadError) {
+                    console.error(originalUploadError);
+                    setMessage("Original flash image upload failed.");
+                    setUploadingImage(false);
+                    return;
+                }
+
+                const { data: originalData } = supabase.storage
+                    .from("website-images")
+                    .getPublicUrl(originalFileName);
+
+                originalImageUrl = originalData.publicUrl;
+            }
+
+            const croppedFileName = `flash-design-${Date.now()}.jpg`;
 
             const croppedFile = await getCroppedImageFile(
                 flashCropPreview,
                 flashCroppedAreaPixels,
-                fileName
+                croppedFileName
             );
 
-            const { error } = await supabase.storage
+            const { error: croppedUploadError } = await supabase.storage
                 .from("website-images")
-                .upload(fileName, croppedFile, {
+                .upload(croppedFileName, croppedFile, {
                     cacheControl: "3600",
                     upsert: true,
                 });
 
-            if (error) {
-                console.error(error);
+            if (croppedUploadError) {
+                console.error(croppedUploadError);
                 setMessage("Flash image upload failed.");
                 setUploadingImage(false);
                 return;
             }
 
-            const { data } = supabase.storage
+            const { data: croppedData } = supabase.storage
                 .from("website-images")
-                .getPublicUrl(fileName);
+                .getPublicUrl(croppedFileName);
 
-            updateField("image_url", data.publicUrl);
+            if (flashImageTarget === "edit") {
+                updateEditField("image_url", croppedData.publicUrl);
+
+                if (originalImageUrl) {
+                    updateEditField("original_image_url", originalImageUrl);
+                }
+
+                setMessage("Flash image cropped. Click Save changes to keep it.");
+            } else {
+                updateField("image_url", croppedData.publicUrl);
+
+                if (originalImageUrl) {
+                    updateField("original_image_url", originalImageUrl);
+                }
+
+                setMessage("Flash image uploaded. Fill in the details, then save the design.");
+            }
+
+            setFlashCropFile(null);
             setFlashCropPreview("");
             setFlashCroppedAreaPixels(null);
-            setMessage("Flash image uploaded. Fill in the details, then save the design.");
         } catch (error) {
             console.error(error);
             setMessage("Something went wrong while cropping the flash image.");
@@ -215,6 +336,7 @@ function ManageFlashDesigns() {
             price: priceNumber,
             status: form.status,
             image_url: form.image_url,
+            original_image_url: form.original_image_url,
             updated_at: new Date().toISOString(),
         });
 
@@ -232,8 +354,99 @@ function ManageFlashDesigns() {
                 price: "",
                 status: "available",
                 image_url: "",
+                original_image_url: "",
             });
 
+            loadFlashDesigns();
+        }
+
+        setSaving(false);
+    }
+
+    async function deleteFlashDesign(id: string) {
+        const confirmed = window.confirm(
+            "Are you sure you want to delete this flash design? This cannot be undone."
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        setMessage("");
+
+        const { error } = await (supabase as any)
+            .from("flash_designs")
+            .delete()
+            .eq("id", id);
+
+        if (error) {
+            console.error(error);
+            setMessage("Something went wrong. Flash design was not deleted.");
+            return;
+        }
+
+        setMessage("Flash design deleted.");
+        loadFlashDesigns();
+    }
+
+    async function updateFlashStatus(id: string, status: string) {
+        setMessage("");
+
+        const { error } = await (supabase as any)
+            .from("flash_designs")
+            .update({
+                status,
+                updated_at: new Date().toISOString(),
+            })
+            .eq("id", id);
+
+        if (error) {
+            console.error(error);
+            setMessage("Something went wrong. Flash status was not updated.");
+            return;
+        }
+
+        setMessage("Flash status updated.");
+        loadFlashDesigns();
+    }
+
+    async function saveEditedFlashDesign() {
+        if (!editingId) {
+            return;
+        }
+
+        setSaving(true);
+        setMessage("");
+
+        if (!editForm.title.trim()) {
+            setMessage("Please add a title before saving.");
+            setSaving(false);
+            return;
+        }
+
+        const priceNumber = editForm.price ? Number(editForm.price) : null;
+
+        const { error } = await (supabase as any)
+            .from("flash_designs")
+            .update({
+                title: editForm.title,
+                description: editForm.description,
+                style: editForm.style,
+                size: editForm.size,
+                price: priceNumber,
+                status: editForm.status,
+                image_url: editForm.image_url,
+                original_image_url: editForm.original_image_url,
+                updated_at: new Date().toISOString(),
+            })
+            .eq("id", editingId);
+
+        if (error) {
+            console.error(error);
+            setMessage("Something went wrong. Flash design was not updated.");
+        } else {
+            setMessage("Flash design updated successfully.");
+            cancelEditingFlash();
             loadFlashDesigns();
         }
 
@@ -273,7 +486,7 @@ function ManageFlashDesigns() {
                                 type="file"
                                 accept="image/*"
                                 className="hidden"
-                                onChange={selectFlashImageForCrop}
+                                onChange={(event) => selectFlashImageForCrop(event, "new")}
                             />
                         </label>
                     </div>
@@ -358,6 +571,129 @@ function ManageFlashDesigns() {
                 </div>
             </div>
 
+            {editingId && (
+                <div className="mt-8 rounded-2xl border bg-card p-6">
+                    <h2 className="text-xl font-semibold">Edit flash design</h2>
+
+                    <div className="mt-6 space-y-5">
+                        <div>
+                            <label className="block text-sm font-medium">Title</label>
+                            <input
+                                className="mt-2 w-full rounded-lg border px-3 py-2"
+                                value={editForm.title}
+                                onChange={(event) => updateEditField("title", event.target.value)}
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium">Description</label>
+                            <textarea
+                                className="mt-2 min-h-24 w-full rounded-lg border px-3 py-2"
+                                value={editForm.description}
+                                onChange={(event) =>
+                                    updateEditField("description", event.target.value)
+                                }
+                            />
+                        </div>
+
+                        <div className="grid gap-5 md:grid-cols-3">
+                            <div>
+                                <label className="block text-sm font-medium">Style</label>
+                                <input
+                                    className="mt-2 w-full rounded-lg border px-3 py-2"
+                                    value={editForm.style}
+                                    onChange={(event) => updateEditField("style", event.target.value)}
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium">Size</label>
+                                <input
+                                    className="mt-2 w-full rounded-lg border px-3 py-2"
+                                    value={editForm.size}
+                                    onChange={(event) => updateEditField("size", event.target.value)}
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium">Price</label>
+                                <input
+                                    className="mt-2 w-full rounded-lg border px-3 py-2"
+                                    value={editForm.price}
+                                    onChange={(event) => updateEditField("price", event.target.value)}
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium">Status</label>
+                            <select
+                                className="mt-2 w-full rounded-lg border px-3 py-2"
+                                value={editForm.status}
+                                onChange={(event) => updateEditField("status", event.target.value)}
+                            >
+                                <option value="available">Available</option>
+                                <option value="claimed">Claimed</option>
+                                <option value="sold">Sold</option>
+                            </select>
+                        </div>
+
+                        {editForm.image_url && (
+                            <img
+                                src={editForm.image_url}
+                                alt="Flash design preview"
+                                className="aspect-[4/5] w-48 rounded-xl border object-cover"
+                            />
+                        )}
+
+                        <div>
+                            <p className="mt-2 text-sm text-muted-foreground">
+                                Replace the image completely, or re-crop the current saved image.
+                            </p>
+
+                            <div className="mt-3 flex flex-wrap gap-3">
+                                <label className="inline-flex cursor-pointer items-center rounded-full border px-5 py-2 text-sm hover:bg-accent">
+                                    Replace flash image
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={(event) => selectFlashImageForCrop(event, "edit")}
+                                    />
+                                </label>
+
+                                <button
+                                    type="button"
+                                    onClick={recropCurrentFlashImage}
+                                    className="rounded-full border px-5 py-2 text-sm hover:bg-accent"
+                                >
+                                    Re-crop current image
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-wrap gap-3">
+                            <button
+                                type="button"
+                                onClick={saveEditedFlashDesign}
+                                disabled={saving}
+                                className="rounded-full bg-foreground px-5 py-2 text-sm font-medium text-background disabled:opacity-50"
+                            >
+                                {saving ? "Saving..." : "Save changes"}
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={cancelEditingFlash}
+                                className="rounded-full border px-5 py-2 text-sm hover:bg-accent"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="mt-8 rounded-2xl border bg-card p-6">
                 <h2 className="text-xl font-semibold">Saved flash designs</h2>
 
@@ -387,9 +723,15 @@ function ManageFlashDesigns() {
                                         </p>
                                     </div>
 
-                                    <span className="rounded-full bg-secondary px-3 py-1 text-xs capitalize">
-                                        {design.status}
-                                    </span>
+                                    <select
+                                        className="rounded-full border bg-background px-3 py-1 text-xs capitalize"
+                                        value={design.status}
+                                        onChange={(event) => updateFlashStatus(design.id, event.target.value)}
+                                    >
+                                        <option value="available">Available</option>
+                                        <option value="claimed">Claimed</option>
+                                        <option value="sold">Sold</option>
+                                    </select>
                                 </div>
 
                                 {design.description && (
@@ -401,6 +743,23 @@ function ManageFlashDesigns() {
                                 {design.price !== null && (
                                     <p className="mt-3 text-sm font-medium">£{design.price}</p>
                                 )}
+                                <div className="mt-4 flex flex-wrap gap-2 border-t pt-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => startEditingFlash(design)}
+                                        className="rounded-full border px-4 py-2 text-sm hover:bg-accent"
+                                    >
+                                        Edit
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => deleteFlashDesign(design.id)}
+                                        className="rounded-full border border-destructive/40 px-4 py-2 text-sm text-destructive hover:bg-destructive/10"
+                                    >
+                                        Delete
+                                    </button>
+                                </div>
                             </div>
                         ))}
                     </div>

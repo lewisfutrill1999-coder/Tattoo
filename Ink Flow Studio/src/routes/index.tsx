@@ -7,7 +7,15 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-type Flash = { id: string; title: string; style: string; size: string; price: number; status: string };
+type Flash = {
+  id: string;
+  title: string;
+  style: string | null;
+  size: string | null;
+  price: number | null;
+  status: string;
+  image_url: string | null;
+};
 
 type SiteSettings = {
   business_name: string;
@@ -37,7 +45,7 @@ function Home() {
   });
   useEffect(() => {
     (supabase.from("flash_designs") as any)
-      .select("id,title,style,size,price,status")
+      .select("id,title,style,size,price,status,image_url")
       .eq("status", "available")
       .limit(4)
       .then(({ data }: any) => setFlash(data ?? []));
@@ -151,12 +159,25 @@ function Home() {
             ))
           ) : flash.map((f) => (
             <Link key={f.id} to="/flash" className="group rounded-2xl bg-card border border-border/60 overflow-hidden hover:shadow-lg transition">
-              <div className="aspect-square bg-gradient-to-br from-secondary to-accent flex items-center justify-center">
-                <Leaf className="h-12 w-12 text-primary/60 group-hover:scale-110 transition" strokeWidth={1} />
+              <div className="aspect-[4/5] bg-gradient-to-br from-secondary to-accent flex items-center justify-center overflow-hidden">
+                {f.image_url ? (
+                  <img
+                    src={f.image_url}
+                    alt={f.title}
+                    className="h-full w-full object-cover transition group-hover:scale-105"
+                  />
+                ) : (
+                  <Leaf
+                    className="h-12 w-12 text-primary/60 group-hover:scale-110 transition"
+                    strokeWidth={1}
+                  />
+                )}
               </div>
               <div className="p-4">
                 <p className="font-medium">{f.title}</p>
-                <p className="text-xs text-muted-foreground mt-1">{f.style} · £{Number(f.price).toFixed(0)}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {f.style || "Flash"} · {f.price !== null ? `£${Number(f.price).toFixed(0)}` : "Price TBC"}
+                </p>
               </div>
             </Link>
           ))}
